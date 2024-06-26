@@ -1,0 +1,10 @@
+streamlit
+langchain
+langchain-community
+langchain-core
+langchain-pinecone
+pinecone-client
+python-dotenv
+unstructured
+notebook
+unstructured[all-docs]

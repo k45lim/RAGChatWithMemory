@@ -1,0 +1,13 @@
+
+
+
+Different types of data sources that could be used to give context to the model include structured databases, unstructured text from sources like news articles or books, knowledge graphs, and domain-specific knowledge bases. These data sources can provide the model with a rich understanding of various topics and domains, allowing it to generate more accurate and contextually relevant responses. Additionally, real-time data from sources such as social media or online forums can also be used to provide up-to-date context for the model. Each type of data source has its own strengths and limitations, and exploring the potential of each could provide valuable insights into enhancing the capabilities of large language models with external knowledge.
+
+
+
+take atleast 5 data source(1 ppt, 1 weblodaer, 1 pdf, 1txt, 1csv)
+maintain one knowledge base(mongodb, astradb , pineconde, weviate)
+user will ask you have to provide answer based on the asked question using this know;ledge base
+handle the comman question as well like hi hello how are you good evening good morning etc.
+you have to mention the complete memory of the conversation here the threshold is 10
+then create a UI for you bot
