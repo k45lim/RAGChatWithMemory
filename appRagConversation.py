@@ -28,19 +28,15 @@ import pickle
 
 
 directory_path = "./pickup"
-llm = Ollama(model="llama3")
+st.session_state.llm = Ollama(model="llama3")
 embedder = OllamaEmbeddings(model="nomic-embed-text")
 embedding_dimension = 768 
 if "chat_history_limit" not in st.session_state:
     st.session_state.chat_history_limit = 10
 
-load_dotenv()
-
 def get_vectorstore():
     load_dotenv()
-    
     PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-
     #PINECONE_API_ENV = os.getenv("PINECONE_API_ENV")
     from pinecone import Pinecone, ServerlessSpec
     database = Pinecone(api_key=PINECONE_API_KEY)
@@ -55,58 +51,44 @@ def get_vectorstore():
             metric="cosine",
             spec=serverless_spec,
         )
-    
     if is_new_database:
         print("Run the data load up to initialize Pinecone dataset")
         vector_store = PineconeVectorStore.from_documents(split_documents, embedding=embedder, index_name=INDEX_NAME)
     else: 
         vector_store =  PineconeVectorStore(index_name=INDEX_NAME, embedding=embedder)
         print("VectorStore Loaded")
-        
     time.sleep(1)
     pinecone_index = database.Index(INDEX_NAME)
-    
-    
     return vector_store
 
 def get_context_retriever_chain(vector_store):
-    llm = ChatOllama(model="llama3")
-    
+    llm = st.session_state.llm
     retriever = vector_store.as_retriever()
-    
     prompt = ChatPromptTemplate.from_messages([
       MessagesPlaceholder(variable_name="chat_history"),
       ("user", "{input}"),
       ("user", "Given the above conversation, generate a search query to look up in order to get information relevant to the conversation")
     ])
-    
     retriever_chain = create_history_aware_retriever(llm, retriever, prompt)
-    
     return retriever_chain
     
 def get_conversational_rag_chain(retriever_chain): 
-    
-    llm = ChatOllama(model="llama3")
-    
+    llm = st.session_state.llm
     prompt = ChatPromptTemplate.from_messages([
       ("system", "Answer the user's questions based on the below context:\n\n{context}"),
       MessagesPlaceholder(variable_name="chat_history"),
       ("user", "{input}"),
     ])
-    
     stuff_documents_chain = create_stuff_documents_chain(llm,prompt)
-    
     return create_retrieval_chain(retriever_chain, stuff_documents_chain)
 
 def get_response(user_input):
     retriever_chain = get_context_retriever_chain(st.session_state.vector_store)
     conversation_rag_chain = get_conversational_rag_chain(retriever_chain)
-    
     response = conversation_rag_chain.invoke({
         "chat_history": st.session_state.chat_history,
         "input": user_input
     })
-    
     return response['answer']
 
 def check_history_limit():
@@ -121,8 +103,16 @@ st.title("Chat with various documents")
 # sidebar
 with st.sidebar:
     st.header("Set Message Queue")
-    chat_history_limit = st.slider("Choose the number of messages in chat history.. ", 1, 20, 10)
-    st.session_state.chat_history_limit = chat_history_limit
+    #chat_history_limit = st.slider("Choose the number of messages in chat history.. ", 1, 20, 10)
+    chat_history_limit = st.slider(
+    "Choose the number of messages in chat history.. ",
+    min_value=1,
+    max_value=20,
+    value=st.session_state.chat_history_limit,
+    key="chat_history_limit",
+    on_change=check_history_limit
+    )   
+    #st.session_state.chat_history_limit = chat_history_limit
     st.write("Set ",st.session_state.chat_history_limit," messages in the chat history")
 
 # session state
