@@ -27,12 +27,14 @@ import time
 import pickle
 
 
-directory_path = "./pickup"
+directory_path = "./data"
 st.session_state.llm = Ollama(model="llama3")
 embedder = OllamaEmbeddings(model="nomic-embed-text")
 embedding_dimension = 768 
-if "chat_history_limit" not in st.session_state:
-    st.session_state.chat_history_limit = 10
+#if "chat_history_limit" not in st.session_state:
+#    st.session_state.chat_history_limit = 10
+    
+st.session_state.setdefault('chat_history_limit', 10)
 
 def get_vectorstore():
     load_dotenv()
@@ -92,6 +94,7 @@ def get_response(user_input):
     return response['answer']
 
 def check_history_limit():
+    st.session_state.chat_history_limit = st.session_state.chat_history_limit_key
     while len(st.session_state.chat_history) > st.session_state.chat_history_limit:
         st.session_state.chat_history.pop(0)
     return
@@ -104,13 +107,13 @@ st.title("Chat with various documents")
 with st.sidebar:
     st.header("Set Message Queue")
     #chat_history_limit = st.slider("Choose the number of messages in chat history.. ", 1, 20, 10)
-    chat_history_limit = st.slider(
-    "Choose the number of messages in chat history.. ",
-    min_value=1,
-    max_value=20,
-    value=st.session_state.chat_history_limit,
-    key="chat_history_limit",
-    on_change=check_history_limit
+    st.slider(
+        "Choose the number of messages in chat history.. ",
+        min_value=1,
+        max_value=20,
+        value=st.session_state.chat_history_limit,
+        key="chat_history_limit_key",
+        on_change=check_history_limit
     )   
     #st.session_state.chat_history_limit = chat_history_limit
     st.write("Set ",st.session_state.chat_history_limit," messages in the chat history")
